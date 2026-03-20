@@ -1,42 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
-  const [cnpj, setCnpj] = useState("");
-  const [amount, setAmount] = useState("");
-  const [merchantName, setMerchantName] = useState("");
-  const [city, setCity] = useState("");
   const [pixCode, setPixCode] = useState("");
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState("");
 
-  const formatCNPJ = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers
-      .replace(/^(\d{2})(\d)/, "$1.$2")
-      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1/$2")
-      .replace(/(\d{4})(\d)/, "$1-$2")
-      .slice(0, 18);
-  };
-
-  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCNPJ(e.target.value);
-    setCnpj(formatted);
-    setError("");
-    setPixCode("");
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d.,]/g, "");
-    setAmount(value);
-    setPixCode("");
-  };
-
-  const validateCNPJ = (cnpj: string): boolean => {
-    const numbers = cnpj.replace(/\D/g, "");
-    return numbers.length === 14;
-  };
+  const CNPJ = "46424548000160";
+  const MERCHANT_NAME = "IGREJA CIDADE LUZ";
+  const CITY = "FLORIANOPOLIS";
 
   const formatField = (id: string, value: string): string => {
     const len = value.length.toString().padStart(2, "0");
@@ -63,54 +34,31 @@ function App() {
   };
 
   const generatePixCode = () => {
-    const cleanCNPJ = cnpj.replace(/\D/g, "");
-
-    if (!validateCNPJ(cnpj)) {
-      setError("CNPJ inválido. Digite os 14 dígitos.");
-      return;
-    }
-
-    if (!merchantName.trim()) {
-      setError("Nome do recebedor é obrigatório.");
-      return;
-    }
-
-    if (!city.trim()) {
-      setError("Cidade é obrigatória.");
-      return;
-    }
-
-    // Build PIX payload following EMV QR Code specification
     const gui = formatField("00", "br.gov.bcb.pix");
-    const pixKey = formatField("01", cleanCNPJ);
+    const pixKey = formatField("01", CNPJ);
     const merchantAccountInfo = formatField("26", gui + pixKey);
 
     let payload = "";
-    payload += formatField("00", "01"); // Payload Format Indicator
-    payload += formatField("01", "11"); // Point of Initiation (11 = static)
+    payload += formatField("00", "01");
+    payload += formatField("01", "11");
     payload += merchantAccountInfo;
-    payload += formatField("52", "0000"); // Merchant Category Code
-    payload += formatField("53", "986"); // Transaction Currency (BRL)
+    payload += formatField("52", "0000");
+    payload += formatField("53", "986");
+    payload += formatField("58", "BR");
+    payload += formatField("59", MERCHANT_NAME);
+    payload += formatField("60", CITY);
+    payload += formatField("62", formatField("05", "***"));
 
-    if (amount) {
-      const formattedAmount = parseFloat(amount.replace(",", ".")).toFixed(2);
-      payload += formatField("54", formattedAmount);
-    }
-
-    payload += formatField("58", "BR"); // Country Code
-    payload += formatField("59", merchantName.toUpperCase().slice(0, 25)); // Merchant Name
-    payload += formatField("60", city.toUpperCase().slice(0, 15)); // Merchant City
-    payload += formatField("62", formatField("05", "***")); // Additional Data Field
-
-    // Add CRC placeholder and calculate
     payload += "6304";
     const crc = calculateCRC16(payload);
     payload += crc;
 
     setPixCode(payload);
-    setCopied(false);
-    setError("");
   };
+
+  useEffect(() => {
+    generatePixCode();
+  }, []);
 
   const copyToClipboard = async () => {
     try {
@@ -118,7 +66,15 @@ function App() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Erro ao copiar. Tente selecionar e copiar manualmente.");
+      // fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = pixCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -126,67 +82,11 @@ function App() {
     <div className="container">
       <div className="card">
         <h1>PIX Copia e Cola</h1>
-        <p className="subtitle">Gere o código PIX e cole no app do seu banco</p>
+        <p className="subtitle">Igreja Cidade Luz</p>
 
-        <div className="form-group">
-          <label htmlFor="cnpj">CNPJ</label>
-          <input
-            id="cnpj"
-            type="text"
-            value={cnpj}
-            onChange={handleCNPJChange}
-            placeholder="00.000.000/0000-00"
-            inputMode="numeric"
-          />
+        <div className="info">
+          <p><strong>CNPJ:</strong> 46.424.548/0001-60</p>
         </div>
-
-        <div className="form-group">
-          <label htmlFor="merchantName">Nome do Recebedor</label>
-          <input
-            id="merchantName"
-            type="text"
-            value={merchantName}
-            onChange={(e) => {
-              setMerchantName(e.target.value);
-              setPixCode("");
-            }}
-            placeholder="Nome da empresa"
-            maxLength={25}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="city">Cidade</label>
-          <input
-            id="city"
-            type="text"
-            value={city}
-            onChange={(e) => {
-              setCity(e.target.value);
-              setPixCode("");
-            }}
-            placeholder="São Paulo"
-            maxLength={15}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="amount">Valor (opcional)</label>
-          <input
-            id="amount"
-            type="text"
-            value={amount}
-            onChange={handleAmountChange}
-            placeholder="0.00"
-            inputMode="decimal"
-          />
-        </div>
-
-        {error && <p className="error">{error}</p>}
-
-        <button onClick={generatePixCode} className="btn-primary">
-          Gerar Código PIX
-        </button>
 
         {pixCode && (
           <div className="result">

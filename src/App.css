@@ -26,77 +26,28 @@ h1 {
 .subtitle {
   margin: 0 0 24px;
   color: #6b7280;
-  font-size: 14px;
+  font-size: 16px;
 }
 
-.form-group {
-  margin-bottom: 20px;
+.info {
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
 }
 
-label {
-  display: block;
-  margin-bottom: 8px;
+.info p {
+  margin: 0;
   color: #374151;
   font-size: 14px;
-  font-weight: 500;
-}
-
-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 16px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box;
-}
-
-input:focus {
-  outline: none;
-  border-color: #820ad1;
-  box-shadow: 0 0 0 3px rgba(130, 10, 209, 0.1);
-}
-
-input::placeholder {
-  color: #9ca3af;
-}
-
-.error {
-  color: #dc2626;
-  font-size: 14px;
-  margin: 0 0 16px;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #820ad1 0%, #6b0eb3 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(130, 10, 209, 0.4);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.result {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
 }
 
 .result label {
+  display: block;
   margin-bottom: 12px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .pix-code {
@@ -115,7 +66,7 @@ input::placeholder {
 
 .btn-copy {
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   background: #10b981;
   color: white;
   border: none;
